@@ -1,0 +1,7 @@
+[ 2025-11-09 14:26:05,255 ] dagshub - INFO - Accessing as rahul-nayak01
+[ 2025-11-09 14:26:06,984 ] dagshub - INFO - Initialized MLflow to track repo "rahul-nayak01/ML-OPs-Model-deployment-Mini-project-"
+[ 2025-11-09 14:26:06,987 ] dagshub - INFO - Repository rahul-nayak01/ML-OPs-Model-deployment-Mini-project- initialized!
+[ 2025-11-09 14:26:10,083 ] root - INFO - Model loaded from ./models/model.pkl
+[ 2025-11-09 14:26:10,113 ] root - INFO - Data loaded from ./data/processed/test_bow.csv
+[ 2025-11-09 14:26:10,127 ] root - INFO - Model evaluation metrics calculated
+[ 2025-11-09 14:26:10,127 ] root - INFO - Metrics saved to reports/metrics.json

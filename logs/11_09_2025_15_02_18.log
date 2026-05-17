@@ -1,0 +1,3 @@
+[ 2025-11-09 15:02:19,481 ] root - INFO - Data loaded from https://raw.githubusercontent.com/rahul-nayak01/Datasets/refs/heads/main/data.csv
+[ 2025-11-09 15:02:19,481 ] root - INFO - pre-processing...
+[ 2025-11-09 15:02:19,485 ] root - INFO - Data preprocessing completed

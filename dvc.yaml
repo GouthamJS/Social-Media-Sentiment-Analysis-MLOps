@@ -1,0 +1,70 @@
+stages:
+  ingestion:
+    cmd: python -c "import pandas as pd; df = pd.read_csv('artificats/raw/sentimentdataset.csv'); df.to_csv('artifacts/raw/ingested.csv', index=False)"
+    deps:
+      - artifacts/raw/sentimentdataset.csv
+    outs:
+      - artifacts/raw/ingested.csv
+
+  eda:
+    cmd: python -c "
+import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+os.makedirs('artifacts/eda', exist_ok=True)
+df = pd.read_csv('artifacts/raw/ingested.csv')
+df.columns = df.columns.str.strip()
+if 'Sentiment' in df.columns:
+    sentiment_counts = df['Sentiment'].value_counts()
+    plt.figure(figsize=(10,6))
+    sentiment_counts.plot(kind='bar', color=['#2ecc71','#e74c3c','#3498db'])
+    plt.title('Sentiment Distribution')
+    plt.savefig('artifacts/eda/sentiment_distribution.png')
+    plt.close()
+"
+    deps:
+      - artifacts/raw/ingested.csv
+    outs:
+      - artifacts/eda/sentiment_distribution.png
+
+  preprocessing:
+    cmd: python -c "
+import pandas as pd
+import re
+df = pd.read_csv('artifacts/raw/ingested.csv')
+df.columns = df.columns.str.strip()
+if 'Text' in df.columns:
+    df['clean_text'] = df['Text'].apply(lambda x: re.sub(r'http\S+|@\w+|[^\w\s]', '', str(x).lower()))
+    df.to_csv('artifacts/processed.csv', index=False)
+"
+    deps:
+      - artifacts/raw/ingested.csv
+    outs:
+      - artifacts/processed.csv
+
+  training:
+    cmd: python -m src.training_pipeline
+    deps:
+      - artifacts/processed.csv
+      - src/training_pipeline.py
+    outs:
+      - artifacts/model.pkl
+      - artifacts/vectorizer.pkl
+      - artifacts/metrics.txt
+
+  evaluation:
+    cmd: python -c "
+import joblib
+import pandas as pd
+model_data = joblib.load('artifacts/model.pkl')
+df = pd.read_csv('artifacts/processed.csv')
+print('Model evaluation completed')
+"
+    deps:
+      - artifacts/model.pkl
+      - artifacts/processed.csv
+    outs:
+      - artifacts/metrics.txt

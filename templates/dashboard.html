@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sentiment Analysis Dashboard</h1>
+            <div class="nav">
+                <a href="/">Home</a>
+                <a href="/dashboard-ui">Dashboard</a>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">Loading dashboard data...</div>
+
+        <div id="dashboard" style="display: none;">
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card total">
+                    <div class="kpi-value" id="total-records">-</div>
+                    <div class="kpi-label">Total Records</div>
+                </div>
+                <div class="kpi-card positive">
+                    <div class="kpi-value" id="positive-count">-</div>
+                    <div class="kpi-label">Positive</div>
+                </div>
+                <div class="kpi-card negative">
+                    <div class="kpi-value" id="negative-count">-</div>
+                    <div class="kpi-label">Negative</div>
+                </div>
+                <div class="kpi-card neutral">
+                    <div class="kpi-value" id="neutral-count">-</div>
+                    <div class="kpi-label">Neutral</div>
+                </div>
+            </div>
+
+            <!-- Text Analytics -->
+            <div class="kpi-grid" style="margin-bottom: 25px;">
+                <div class="kpi-card">
+                    <div class="kpi-value" id="avg-text-length">-</div>
+                    <div class="kpi-label">Avg Text Length</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" id="max-text-length">-</div>
+                    <div class="kpi-label">Max Text Length</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" id="min-text-length">-</div>
+                    <div class="kpi-label">Min Text Length</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Sentiment Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="sentimentPieChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Platform vs Sentiment</h3>
+                    <div class="chart-container">
+                        <canvas id="platformBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card" style="margin-bottom: 25px;">
+                <h3>Sentiment Trend Over Time (Yearly)</h3>
+                <div class="chart-container">
+                    <canvas id="trendLineChart"></canvas>
+                </div>
+            </div>
+
+            
+
+            <h2 style="color: white; margin-bottom: 10px;">Word Cloud Analysis by Sentiment</h2>
+            <div class="wordcloud-grid">
+                <div class="chart-card">
+                    <h3>Positive Words</h3>
+                    <div class="chart-container">
+                        <img src="/artifacts/eda/wordcloud_positive.png" alt="Positive Word Cloud" style="max-width: 100%; height: auto;">
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Negative Words</h3>
+                    <div class="chart-container">
+                        <img src="/artifacts/eda/wordcloud_negative.png" alt="Negative Word Cloud" style="max-width: 100%; height: auto;">
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Neutral Words</h3>
+                    <div class="chart-container">
+                        <img src="/artifacts/eda/wordcloud_neutral.png" alt="Neutral Word Cloud" style="max-width: 100%; height: auto;">
+                    </div>
+                </div>
+            </div>
+
+            <h2 style="color: white; margin-bottom: 10px; margin-top: 20px;">N-gram Analysis</h2>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Unigram Analysis (Top 1-grams)</h3>
+                    <div class="chart-container">
+                        <img src="/artifacts/eda/1gram_analysis.png" alt="Unigram Analysis" style="max-width: 100%; height: auto;">
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Bigram Analysis (Top 2-grams)</h3>
+                    <div class="chart-container">
+                        <img src="/artifacts/eda/2gram_analysis.png" alt="Bigram Analysis" style="max-width: 100%; height: auto;">
+                    </div>
+                </div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Trigram Analysis (Top 3-grams)</h3>
+                    <div class="chart-container">
+                        <img src="/artifacts/eda/3gram_analysis.png" alt="Trigram Analysis" style="max-width: 100%; height: auto;">
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>N-gram by Sentiment</h3>
+                    <div class="chart-container">
+                        <img src="/artifacts/eda/ngram_by_sentiment.png" alt="N-gram by Sentiment" style="max-width: 100%; height: auto;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Platform Sentiment</h3>
+                    <div class="chart-container">
+                        <img src="artifacts/eda/platform_sentiment.png" alt="Platform Sentiment" style="max-width: 60%; height: auto;">
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Text Length Analysis</h3>
+                    <div class="chart-container">
+                        <img src="/artifacts/eda/text_length_analysis.png" alt="Text Length Analysis" style="max-width: 100%; height: auto;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tables -->
+            <div class="tables-grid">
+                <div class="table-card">
+                    <h3>Top Keywords</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Keyword</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keywords-table"></tbody>
+                    </table>
+                </div>
+                <div class="table-card">
+                    <h3>Top Hashtags</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Hashtag</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hashtags-table"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <h3>Sentiment by Platform</h3>
+                <table class="platform-table" id="platform-table">
+                    <thead>
+                        <tr>
+                            <th>Platform</th>
+                            <th>Total</th>
+                            <th>Positive</th>
+                            <th>Negative</th>
+                            <th>Neutral</th>
+                        </tr>
+                    </thead>
+                    <tbody id="platform-tbody"></tbody>
+                </table>
+            </div>
+
+            <div class="table-card" style="margin-top: 20px;">
+                <h3>Sentiment by Country</h3>
+                <table class="platform-table">
+                    <thead>
+                        <tr>
+                            <th>Country</th>
+                            <th>Total</th>
+                            <th>Positive</th>
+                            <th>Negative</th>
+                            <th>Neutral</th>
+                        </tr>
+                    </thead>
+                    <tbody id="country-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="error" class="error-message" style="display: none;"></div>
+    </div>
+
+    <script>
+        let sentimentPieChart = null;
+        let platformBarChart = null;
+        let trendLineChart = null;
+        let platformSentimentChart = null;
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/dashboard');
+                if (!response.ok) throw new Error('Failed to fetch dashboard data');
+                
+                const data = await response.json();
+                console.log('API Response:', data);
+                
+                if (data.error) throw new Error(data.error);
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                
+                populateKPIs(data.kpis);
+                populateTextAnalysis(data.text_analysis);
+                renderCharts(data);
+                populateTables(data);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        function populateKPIs(kpis) {
+            document.getElementById('total-records').textContent = kpis.total_records;
+            document.getElementById('positive-count').textContent = kpis.positive_count + ' (' + kpis.positive_percentage + '%)';
+            document.getElementById('negative-count').textContent = kpis.negative_count + ' (' + kpis.negative_percentage + '%)';
+            document.getElementById('neutral-count').textContent = kpis.neutral_count + ' (' + kpis.neutral_percentage + '%)';
+        }
+
+        function populateTextAnalysis(textAnalysis) {
+            document.getElementById('avg-text-length').textContent = textAnalysis.average_text_length || 'N/A';
+            document.getElementById('max-text-length').textContent = textAnalysis.max_text_length || 'N/A';
+            document.getElementById('min-text-length').textContent = textAnalysis.min_text_length || 'N/A';
+        }
+
+        function renderCharts(data) {
+            renderSentimentPieChart(data.kpis);
+            renderPlatformBarChart(data.platform_analysis);
+            renderTrendLineChart(data.time_analysis);
+        }
+
+        function renderSentimentPieChart(kpis) {
+            const ctx = document.getElementById('sentimentPieChart').getContext('2d');
+            
+            if (sentimentPieChart) sentimentPieChart.destroy();
+            
+            sentimentPieChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive', 'Negative', 'Neutral'],
+                    datasets: [{
+                        data: [kpis.positive_count, kpis.negative_count, kpis.neutral_count],
+                        backgroundColor: ['#43e97b', '#f5576c', '#4facfe'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { padding: 20, font: { size: 14 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderPlatformBarChart(platformAnalysis) {
+            const ctx = document.getElementById('platformBarChart').getContext('2d');
+            
+            if (platformBarChart) platformBarChart.destroy();
+            
+            if (!platformAnalysis.available) {
+                ctx.font = '14px Segoe UI';
+                ctx.fillStyle = '#666';
+                ctx.fillText('No platform data available', 100, 150);
+                return;
+            }
+            
+            const platforms = Object.keys(platformAnalysis.distributions);
+            const positiveData = platforms.map(p => platformAnalysis.distributions[p].Positive);
+            const negativeData = platforms.map(p => platformAnalysis.distributions[p].Negative);
+            const neutralData = platforms.map(p => platformAnalysis.distributions[p].Neutral);
+            
+            platformBarChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: platforms,
+                    datasets: [
+                        { label: 'Positive', data: positiveData, backgroundColor: '#43e97b' },
+                        { label: 'Negative', data: negativeData, backgroundColor: '#f5576c' },
+                        { label: 'Neutral', data: neutralData, backgroundColor: '#4facfe' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function renderTrendLineChart(timeAnalysis) {
+            const ctx = document.getElementById('trendLineChart').getContext('2d');
+            
+            if (trendLineChart) trendLineChart.destroy();
+            
+            if (!timeAnalysis.available) {
+                ctx.font = '14px Segoe UI';
+                ctx.fillStyle = '#666';
+                ctx.fillText('No time data available', 150, 150);
+                return;
+            }
+            
+            if (timeAnalysis.yearly_trend) {
+                const trend = timeAnalysis.yearly_trend;
+                const labels = trend.map(t => t.year.toString());
+                const positiveData = trend.map(t => t.Positive);
+                const negativeData = trend.map(t => t.Negative);
+                const neutralData = trend.map(t => t.Neutral);
+                
+                trendLineChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'Positive', data: positiveData, borderColor: '#43e97b', backgroundColor: 'rgba(67,233,123,0.1)', fill: true, tension: 0.4 },
+                            { label: 'Negative', data: negativeData, borderColor: '#f5576c', backgroundColor: 'rgba(245,87,108,0.1)', fill: true, tension: 0.4 },
+                            { label: 'Neutral', data: neutralData, borderColor: '#4facfe', backgroundColor: 'rgba(79,172,254,0.1)', fill: true, tension: 0.4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true }
+                        },
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            } else if (timeAnalysis.sentiment_trend) {
+                const trend = timeAnalysis.sentiment_trend.slice(-30);
+                const labels = trend.map(t => t.date);
+                const positiveData = trend.map(t => t.Positive);
+                const negativeData = trend.map(t => t.Negative);
+                const neutralData = trend.map(t => t.Neutral);
+                
+                trendLineChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'Positive', data: positiveData, borderColor: '#43e97b', backgroundColor: 'rgba(67,233,123,0.1)', fill: true, tension: 0.4 },
+                            { label: 'Negative', data: negativeData, borderColor: '#f5576c', backgroundColor: 'rgba(245,87,108,0.1)', fill: true, tension: 0.4 },
+                            { label: 'Neutral', data: neutralData, borderColor: '#4facfe', backgroundColor: 'rgba(79,172,254,0.1)', fill: true, tension: 0.4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true }
+                        },
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            }
+        }
+
+        function populateTables(data) {
+            populateKeywordsTable(data.top_keywords);
+            populateHashtagsTable(data.top_hashtags);
+            populatePlatformTable(data.platform_analysis);
+            populateCountryTable(data.country_analysis);
+        }
+
+        function populateKeywordsTable(keywords) {
+            const tbody = document.getElementById('keywords-table');
+            tbody.innerHTML = '';
+            
+            if (!keywords || keywords.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:#666;">No keywords found</td></tr>';
+                return;
+            }
+            
+            keywords.forEach((keyword, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="rank">${index + 1}</td>
+                    <td class="keyword">${keyword}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function populateHashtagsTable(hashtags) {
+            const tbody = document.getElementById('hashtags-table');
+            tbody.innerHTML = '';
+            
+            if (!hashtags || hashtags.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:#666;">No hashtags found</td></tr>';
+                return;
+            }
+            
+            hashtags.forEach((hashtag, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="rank">${index + 1}</td>
+                    <td class="keyword">${hashtag}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function populatePlatformTable(platformAnalysis) {
+            const tbody = document.getElementById('platform-tbody');
+            tbody.innerHTML = '';
+            
+            if (!platformAnalysis.available) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#666;">No platform data available</td></tr>';
+                return;
+            }
+            
+            const platforms = Object.keys(platformAnalysis.distributions);
+            platforms.forEach(platform => {
+                const data = platformAnalysis.distributions[platform];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${platform}</strong></td>
+                    <td>${data.total}</td>
+                    <td><span class="positive-badge">${data.Positive}</span></td>
+                    <td><span class="negative-badge">${data.Negative}</span></td>
+                    <td><span class="neutral-badge">${data.Neutral}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function populateCountryTable(countryAnalysis) {
+            const tbody = document.getElementById('country-tbody');
+            tbody.innerHTML = '';
+            
+            if (!countryAnalysis.available) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#666;">No country data available</td></tr>';
+                return;
+            }
+            
+            const countries = Object.keys(countryAnalysis.distributions);
+            countries.slice(0, 15).forEach(country => {
+                const data = countryAnalysis.distributions[country];
+                const row = document.createElement('tr');
+                row.className = 'country-row';
+                row.innerHTML = `
+                    <td><strong>${country}</strong></td>
+                    <td>${data.total}</td>
+                    <td><span class="positive-badge">${data.Positive}</span></td>
+                    <td><span class="negative-badge">${data.Negative}</span></td>
+                    <td><span class="neutral-badge">${data.Neutral}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>
